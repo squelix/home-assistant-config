@@ -1,0 +1,21 @@
+bt_interface: !secret rpi_bluetooth_mac
+bt_auto_restart: True
+active_scan: True
+discovery: True
+period: 60
+use_median: False
+decimals: 1
+log_spikes: False
+restore_state: False
+report_unknown: False
+devices:
+  # sensor
+  - mac: !secret xiaomi_thermometre_1_mac
+    name: "Thermomètre"
+    encryption_key: !secret xiaomi_thermometre_1_encryption_key
+    temperature_unit: C
+    decimals: 2
+    use_median: False
+    restore_state: default
+    track_device: True
+    tracker_scan_interval: 20

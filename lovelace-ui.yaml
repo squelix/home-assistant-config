@@ -1,1 +1,88 @@
 background: var(--background-image)
+title: Maison
+views:
+  - path: default_view
+    title: Home
+    icon: mdi:home
+    badges: []
+    cards:
+      - type: weather-forecast
+        entity: weather.grenoble
+      - type: entities
+        entities:
+          - entity: binary_sensor.rpi_power_status
+          - entity: binary_sensor.updater
+          - entity: sensor.memory_free
+          - entity: sensor.disk_use_percent_config
+        title: Capteur binaire
+      - type: entities
+        entities:
+          - sensor.co2_intensity
+          - sensor.grid_fossil_fuel_percentage
+          - sensor.hacs
+        title: Capteur
+      - type: media-control
+        entity: media_player.spotify_mikador_le_pacificateur
+      - type: media-control
+        entity: media_player.shield
+      - type: sensor
+        entity: sensor.ble_humidity_thermometre
+        graph: line
+        detail: 2
+        name: Humidité
+      - type: sensor
+        entity: sensor.ble_temperature_thermometre
+        graph: line
+        detail: 2
+        name: Température
+      - type: entities
+        entities:
+          - entity: light.bureau
+          - entity: light.chambre
+          - entity: light.cuisine
+          - entity: light.salon
+          - entity: light.hue_smart_plug_1
+      - type: entities
+        entities:
+          - entity: sensor.motion_sensor_couloir_entree_light_level
+            name: Light level
+          - entity: binary_sensor.motion_sensor_couloir_entree_motion
+            name: Motion
+          - entity: sensor.motion_sensor_couloir_entree_temperature
+            name: Temperature
+        title: Motion Sensor Couloir Entrée
+      - type: entities
+        entities:
+          - entity: sensor.motion_sensor_couloir_chambre_light_level_2
+            name: Light level
+          - entity: binary_sensor.motion_sensor_couloir_chambre_motion_2
+            name: Motion
+          - entity: sensor.motion_sensor_couloir_chambre_temperature_2
+            name: Temperature
+        title: Motion sensor Couloir Chambre
+  - title: Graphiques
+    path: graphiques
+    icon: mdi:chart-areaspline
+    type: sidebar
+    badges: []
+    cards:
+      - type: statistics-graph
+        entities:
+          - sensor.ble_temperature_thermometre
+        title: Température Salon
+        days_to_show: 31
+      - type: statistics-graph
+        entities:
+          - sensor.ble_humidity_thermometre
+        days_to_show: 31
+        title: Humidité Salon
+      - type: statistics-graph
+        entities:
+          - sensor.motion_sensor_couloir_entree_temperature
+        days_to_show: 31
+        title: Température Entrée
+      - type: statistics-graph
+        entities:
+          - sensor.motion_sensor_couloir_chambre_temperature_2
+        days_to_show: 31
+        title: Température Chambres

@@ -1,7 +1,15 @@
-# Configure a default setup of Home Assistant (frontend, api, etc)
+---
+#-
+#                   __ _                       _   _
+#   ___ ___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __
+#  / __/ _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \
+# | (_| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |
+#  \___\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+#                        |___/
+#
+#- from github.com/squelix/home-assistant-config
+homeassistant: !include includes/homeassistant.yaml
 default_config:
-
-# Text to speech
 tts:
   - platform: google_translate
 
@@ -9,36 +17,11 @@ group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
-spotify:
-  client_id: !secret spotify_client_id
-  client_secret: !secret spotify_client_secret
-ble_monitor:
-  bt_interface: !secret rpi_bluetooth_mac
-  bt_auto_restart: True
-  active_scan: True
-  discovery: True
-  period: 60
-  use_median: False
-  decimals: 1
-  log_spikes: False
-  restore_state: False
-  report_unknown: False
-  devices:
-    # sensor
-    - mac: !secret xiaomi_thermometre_1_mac
-      name: "Thermomètre"
-      encryption_key: !secret xiaomi_thermometre_1_encryption_key
-      temperature_unit: C
-      decimals: 2
-      use_median: False
-      restore_state: default
-      track_device: True
-      tracker_scan_interval: 20
-sensor:
-  - platform: systemmonitor
-    resources:
-      - type: disk_use_percent
-        arg: /config
-      - type: memory_free
+
+spotify: !include includes/spotify.yaml
+ble_monitor: !include includes/ble_monitor.yaml
+sensor: !include includes/sensor.yaml
+light: !include includes/lights.yaml
+
 frontend:
   themes: !include_dir_merge_named themes

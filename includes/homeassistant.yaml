@@ -1,0 +1,20 @@
+---
+#-
+#  _                                        _     _              _
+# | |__   ___  _ __ ___   ___  __ _ ___ ___(_)___| |_ __ _ _ __ | |_
+# | '_ \ / _ \| '_ ` _ \ / _ \/ _` / __/ __| / __| __/ _` | '_ \| __|
+# | | | | (_) | | | | | |  __/ (_| \__ \__ \ \__ \ || (_| | | | | |_
+# |_| |_|\___/|_| |_| |_|\___|\__,_|___/___/_|___/\__\__,_|_| |_|\__|
+#
+#
+#- from github.com/squelix/home-assistant-config
+name: Maison
+latitude: !secret ha_latitude
+longitude: !secret ha_longitude
+elevation: !secret ha_elevation
+unit_system: metric
+time_zone: !secret ha_timezone
+currency: !secret ha_currency
+temperature_unit: !secret ha_temperature_unit
+external_url: !secret ha_external_url
+internal_url: !secret ha_internal_url
