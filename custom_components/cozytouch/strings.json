@@ -1,0 +1,21 @@
+{
+    "config": {
+        "title": "Cozytouch",
+        "step": {
+            "user": {
+                "title": "Add cozytouch's bridge",
+                "description": "Please set your email and password",
+                "data": {
+                    "username": "mail",
+                    "password": "password",
+                    "timeout": "timeout",
+                    "model": "model"
+                }
+            }
+        },
+        "error": {
+            "login_inccorect": "User or password inccorect",
+            "unknown": "Unknown error occurred"
+        }
+    }
+}
