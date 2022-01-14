@@ -1,12 +1,3 @@
-#-
-#              _                        _   _
-#   __ _ _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __  ___
-#  / _` | | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \/ __|
-# | (_| | |_| | || (_) | | | | | | (_| | |_| | (_) | | | \__ \
-#  \__,_|\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|___/
-#
-#
-#- from github.com/squelix/home-assistant-config
 - id: '1638178228067'
   alias: APP Lumière Salon
   description: ''
@@ -18,7 +9,7 @@
   condition: []
   action:
   - type: toggle
-    device_id: 80ace8cdffbc7620a74aee20a729b10d
+    device_id: ac5cf887c79d094884301ca8d4d2ba3b
     entity_id: light.salon
     domain: light
   mode: single
@@ -33,7 +24,7 @@
   condition: []
   action:
   - type: toggle
-    device_id: 3d5cda405c5d69920f8a305a317c1782
+    device_id: d666a0fddcf0d1eba34599fa20e7c6b8
     entity_id: light.cuisine
     domain: light
   mode: single
@@ -48,7 +39,7 @@
   condition: []
   action:
   - type: toggle
-    device_id: f480c7371d7361520569d747b24ef35e
+    device_id: 57395e5d594fa9413b03a8143237b878
     entity_id: light.chambre
     domain: light
   mode: single
@@ -63,7 +54,7 @@
   condition: []
   action:
   - type: toggle
-    device_id: 09e035ecb7a626593c4e60ebd214b340
+    device_id: 3d1714f111ebc8f8813cc963821b2bb2
     entity_id: light.bureau
     domain: light
   mode: single
@@ -78,12 +69,12 @@
   condition: []
   action:
   - type: toggle
-    device_id: bde3bcd4e48879354357d3ffe6e280a4
-    entity_id: light.hue_white_lamp_1
+    device_id: c9eeb066ccf7373fd696715ad6f41bc1
+    entity_id: light.couloir_chambre
     domain: light
   - type: toggle
-    device_id: a8609b9797fd158df5cca94662cbab16
-    entity_id: light.hue_white_lamp_2
+    device_id: a2d6d3aed334fb11c4a81dffb93aecfd
+    entity_id: light.couloir_entree
     domain: light
   mode: single
 - id: '1638982078550'
@@ -92,14 +83,9 @@
   trigger:
   - type: motion
     platform: device
-    device_id: d94d5c3bc5dd1c3b540bf7abee034de7
-    entity_id: binary_sensor.motion_sensor_couloir_entree_motion
+    device_id: e13cb800cc0e8f9a4c29600e33ac0e3f
+    entity_id: binary_sensor.sensor_couloir_entree_motion
     domain: binary_sensor
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-      milliseconds: 0
   condition:
   - condition: and
     conditions:
@@ -122,14 +108,14 @@
         - sun
     - type: is_illuminance
       condition: device
-      device_id: d94d5c3bc5dd1c3b540bf7abee034de7
-      entity_id: sensor.motion_sensor_couloir_entree_light_level
+      device_id: e13cb800cc0e8f9a4c29600e33ac0e3f
+      entity_id: sensor.sensor_couloir_entree_illuminance
       domain: sensor
       below: 10
     - condition: device
       type: is_off
-      device_id: a8609b9797fd158df5cca94662cbab16
-      entity_id: light.hue_white_lamp_2
+      device_id: a2d6d3aed334fb11c4a81dffb93aecfd
+      entity_id: light.couloir_entree
       domain: light
     - condition: or
       conditions:
@@ -141,32 +127,30 @@
         after_offset: '30'
   action:
   - type: turn_on
-    device_id: a8609b9797fd158df5cca94662cbab16
-    entity_id: light.hue_white_lamp_2
+    device_id: a2d6d3aed334fb11c4a81dffb93aecfd
+    entity_id: light.couloir_entree
     domain: light
-    brightness_pct: 80
   mode: single
 - id: '1638984204571'
   alias: Motion Sensor - Couloir Entrée - Down
   description: ''
   trigger:
-  - type: no_motion
+  - type: motion
     platform: device
-    device_id: d94d5c3bc5dd1c3b540bf7abee034de7
-    entity_id: binary_sensor.motion_sensor_couloir_entree_motion
+    device_id: e13cb800cc0e8f9a4c29600e33ac0e3f
+    entity_id: binary_sensor.sensor_couloir_entree_motion
     domain: binary_sensor
     for:
       hours: 0
       minutes: 0
       seconds: 10
-      milliseconds: 0
   condition:
   - condition: and
     conditions:
     - condition: device
       type: is_on
-      device_id: a8609b9797fd158df5cca94662cbab16
-      entity_id: light.hue_white_lamp_2
+      device_id: a2d6d3aed334fb11c4a81dffb93aecfd
+      entity_id: light.couloir_entree
       domain: light
     - condition: or
       conditions:
@@ -176,8 +160,8 @@
         after: sunset
   action:
   - type: turn_off
-    device_id: a8609b9797fd158df5cca94662cbab16
-    entity_id: light.hue_white_lamp_2
+    device_id: a2d6d3aed334fb11c4a81dffb93aecfd
+    entity_id: light.couloir_entree
     domain: light
   mode: single
 - id: '1638984866774'
@@ -191,8 +175,8 @@
   condition: []
   action:
   - type: toggle
-    device_id: c8beac93294defe87334a87cee2e86e6
-    entity_id: light.hue_smart_plug_1
+    device_id: ad9872da70d86bd16774e0cf17cffe5e
+    entity_id: light.lampadaire_salon
     domain: light
   mode: single
 - id: '1638985224006'
@@ -201,14 +185,9 @@
   trigger:
   - type: motion
     platform: device
-    device_id: d04061c3545c7d0a48a0b98a5fc06269
-    entity_id: binary_sensor.motion_sensor_couloir_chambre_motion_2
+    device_id: e47c2e9652be0ecd1859f2b9d1f39f2c
+    entity_id: binary_sensor.sensor_couloir_chambre_motion
     domain: binary_sensor
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-      milliseconds: 0
   condition:
   - condition: and
     conditions:
@@ -231,14 +210,14 @@
         - sun
     - type: is_illuminance
       condition: device
-      device_id: d04061c3545c7d0a48a0b98a5fc06269
-      entity_id: sensor.motion_sensor_couloir_chambre_light_level_2
+      device_id: e47c2e9652be0ecd1859f2b9d1f39f2c
+      entity_id: sensor.sensor_couloir_chambre_illuminance
       domain: sensor
       below: 10
     - condition: device
       type: is_off
-      device_id: bde3bcd4e48879354357d3ffe6e280a4
-      entity_id: light.hue_white_lamp_1
+      device_id: c9eeb066ccf7373fd696715ad6f41bc1
+      entity_id: light.couloir_chambre
       domain: light
     - condition: or
       conditions:
@@ -250,10 +229,9 @@
         after_offset: '30'
   action:
   - type: turn_on
-    device_id: bde3bcd4e48879354357d3ffe6e280a4
-    entity_id: light.hue_white_lamp_1
+    device_id: c9eeb066ccf7373fd696715ad6f41bc1
+    entity_id: light.couloir_chambre
     domain: light
-    brightness_pct: 80
   mode: single
 - id: '1638985454413'
   alias: Motion Sensor - Couloir Chambre - Down
@@ -261,14 +239,13 @@
   trigger:
   - type: no_motion
     platform: device
-    device_id: d04061c3545c7d0a48a0b98a5fc06269
-    entity_id: binary_sensor.motion_sensor_couloir_chambre_motion_2
+    device_id: e47c2e9652be0ecd1859f2b9d1f39f2c
+    entity_id: binary_sensor.sensor_couloir_chambre_motion
     domain: binary_sensor
     for:
       hours: 0
       minutes: 0
       seconds: 10
-      milliseconds: 0
   condition:
   - condition: and
     conditions:
@@ -280,12 +257,12 @@
         after: sunset
     - condition: device
       type: is_on
-      device_id: bde3bcd4e48879354357d3ffe6e280a4
-      entity_id: light.hue_white_lamp_1
+      device_id: c9eeb066ccf7373fd696715ad6f41bc1
+      entity_id: light.couloir_chambre
       domain: light
   action:
   - type: turn_off
-    device_id: bde3bcd4e48879354357d3ffe6e280a4
-    entity_id: light.hue_white_lamp_1
+    device_id: c9eeb066ccf7373fd696715ad6f41bc1
+    entity_id: light.couloir_chambre
     domain: light
   mode: single

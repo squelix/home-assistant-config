@@ -12,15 +12,15 @@
   name: Lumières du salon
   unique_id: lights.salon
   entities:
-    - light.hue_smart_plug_1
+    - light.lampadaire_salon
     - light.salon
 
 - platform: group
   name: Lumières du couloir
   unique_id: lights.couloir
   entities:
-    - light.hue_white_lamp_2
-    - light.hue_white_lamp_1
+    - light.couloir_chambre
+    - light.couloir_entree
 
 - platform: group
   name: Lumières de la cuisine

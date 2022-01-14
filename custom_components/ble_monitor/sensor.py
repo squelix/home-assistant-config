@@ -33,12 +33,15 @@ from .const import (
     CONF_TMAX,
     CONF_TMIN_KETTLES,
     CONF_TMAX_KETTLES,
+    CONF_TMIN_PROBES,
+    CONF_TMAX_PROBES,
     CONF_HMIN,
     CONF_HMAX,
     DEFAULT_DEVICE_RESET_TIMER,
     KETTLES,
     MANUFACTURER_DICT,
     MEASUREMENT_DICT,
+    PROBES,
     RENAMED_MODEL_DICT,
     DOMAIN,
     SENSOR_TYPES,
@@ -46,6 +49,32 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+RESTORE_ATTRIBUTES = [
+    "median",
+    "mean",
+    "last median of",
+    "last mean of",
+    "rssi",
+    "firmware",
+    "last packet id",
+    "last button press",
+    "last remote button pressed",
+    "last type of press",
+    "dimmer value",
+    "constant",
+    "volume start",
+    "keg size",
+    "port name",
+    "port state",
+    "port index",
+    "impedance",
+    "acceleration x",
+    "acceleration y",
+    "acceleration z",
+    "light level",
+    ATTR_BATTERY_LEVEL,
+]
 
 
 async def async_setup_platform(hass, conf, add_entities, discovery_info=None):
@@ -236,7 +265,10 @@ class BaseSensor(RestoreEntity, SensorEntity):
     # |--MeasuringSensor (Class)
     # |  |--TemperatureSensor (Class)
     # |  |  |**temperature
+    # |  |  |**temperature probe 1
+    # |  |  |**temperature probe 2
     # |  |  |**temperature outdoor
+    # |  |  |**temperature alarm
     # |  |--HumiditySensor (Class)
     # |  |  |**humidity
     # |  |  |**humidity outdoor
@@ -348,50 +380,9 @@ class BaseSensor(RestoreEntity, SensorEntity):
         except AttributeError:
             pass
         self._state = old_state.state
-        if "median" in old_state.attributes:
-            self._extra_state_attributes["median"] = old_state.attributes["median"]
-        if "mean" in old_state.attributes:
-            self._extra_state_attributes["mean"] = old_state.attributes["mean"]
-        if "last median of" in old_state.attributes:
-            self._extra_state_attributes["last median of"] = old_state.attributes[
-                "last median of"
-            ]
-            self._state = old_state.attributes["median"]
-        if "last mean of" in old_state.attributes:
-            self._extra_state_attributes["last mean of"] = old_state.attributes[
-                "last mean of"
-            ]
-            self._state = old_state.attributes["mean"]
-        if "rssi" in old_state.attributes:
-            self._extra_state_attributes["rssi"] = old_state.attributes["rssi"]
-        if "firmware" in old_state.attributes:
-            self._extra_state_attributes["firmware"] = old_state.attributes["firmware"]
-        if "last packet id" in old_state.attributes:
-            self._extra_state_attributes["last packet id"] = old_state.attributes[
-                "last packet id"
-            ]
-        if "last button press" in old_state.attributes:
-            self._extra_state_attributes["last button press"] = old_state.attributes[
-                "last button press"
-            ]
-        if "last remote button pressed" in old_state.attributes:
-            self._extra_state_attributes[
-                "last remote button pressed"
-            ] = old_state.attributes["last remote button pressed"]
-        if "last type of press" in old_state.attributes:
-            self._extra_state_attributes["last type of press"] = old_state.attributes[
-                "last type of press"
-            ]
-        if "dimmer value" in old_state.attributes:
-            self._extra_state_attributes["dimmer value"] = old_state.attributes[
-                "dimmer value"
-            ]
-        if "constant" in old_state.attributes:
-            self._extra_state_attributes["constant"] = old_state.attributes["constant"]
-        if ATTR_BATTERY_LEVEL in old_state.attributes:
-            self._extra_state_attributes[ATTR_BATTERY_LEVEL] = old_state.attributes[
-                ATTR_BATTERY_LEVEL
-            ]
+        for attr in RESTORE_ATTRIBUTES:
+            if attr in old_state.attributes:
+                self._extra_state_attributes[attr] = old_state.attributes[attr]
         self.ready_for_update = True
 
     @property
@@ -550,8 +541,15 @@ class TemperatureSensor(MeasuringSensor):
         super().__init__(config, mac, devtype, firmware, description)
         self._attr_native_unit_of_measurement = self._device_settings["temperature unit"]
 
-        self._temp_min = CONF_TMIN_KETTLES if devtype in KETTLES else CONF_TMIN
-        self._temp_max = CONF_TMAX_KETTLES if devtype in KETTLES else CONF_TMAX
+        if devtype in KETTLES:
+            self._temp_min = CONF_TMIN_KETTLES
+            self._temp_max = CONF_TMAX_KETTLES
+        elif devtype in PROBES:
+            self._temp_min = CONF_TMIN_PROBES
+            self._temp_max = CONF_TMAX_PROBES
+        else:
+            self._temp_min = CONF_TMIN
+            self._temp_max = CONF_TMAX
         self._lower_temp_limit = self.temperature_limit(config, mac, self._temp_min)
         self._upper_temp_limit = self.temperature_limit(config, mac, self._temp_max)
         self._log_spikes = config[CONF_LOG_SPIKES]
@@ -716,7 +714,7 @@ class AccelerationSensor(InstantUpdateSensor):
 
 
 class WeightSensor(InstantUpdateSensor):
-    """Representation of a non-stabilized Weight sensor."""
+    """Representation of a Weight sensor."""
 
     def __init__(self, config, mac, devtype, firmware, description):
         """Initialize the sensor."""
@@ -736,6 +734,8 @@ class WeightSensor(InstantUpdateSensor):
                 self._extra_state_attributes["weight removed"] = bool(
                     data["weight removed"]
                 )
+        if "impedance" in data:
+            self._extra_state_attributes["impedance"] = data["impedance"]
         if "weight unit" in data:
             self._attr_native_unit_of_measurement = data["weight unit"]
         else:
