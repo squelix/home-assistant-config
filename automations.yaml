@@ -135,7 +135,7 @@
   alias: Motion Sensor - Couloir Entrée - Down
   description: ''
   trigger:
-  - type: motion
+  - type: no_motion
     platform: device
     device_id: e13cb800cc0e8f9a4c29600e33ac0e3f
     entity_id: binary_sensor.sensor_couloir_entree_motion
