@@ -1,7 +1,7 @@
 # Home Assistant Configuration
 Here's my [Home Assistant](https://home-assistant.io/) configuration.
 
-HA is running on a Raspberry Pi 4 Model B.
+HA version 2021.12.9 is running on a Raspberry Pi 4 Model B.
 
 ## Devices
 
