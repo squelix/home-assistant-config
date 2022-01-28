@@ -13,6 +13,7 @@
     entity_id: light.salon
     domain: light
   mode: single
+  
 - id: '1638178485641'
   alias: APP Lumière Cuisine
   description: ''

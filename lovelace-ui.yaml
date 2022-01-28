@@ -15,6 +15,7 @@ views:
           - entity: binary_sensor.rpi_power_status
           - entity: binary_sensor.updater
           - entity: sensor.memory_use_percent
+          - entity: sensor.temperature_cpu
           - entity: sensor.disk_use_percent
         title: Capteur binaire
       - type: entities
@@ -121,3 +122,26 @@ views:
           - sensor.sensor_couloir_chambre_temperature
         days_to_show: 31
         title: Température Chambres
+  - icon: mdi:chart-bell-curve
+    title: Raspberry
+    path: raspberry
+    type: sidebar
+    badges: []
+    cards:
+      - type: statistics-graph
+        entities:
+          - sensor.memory_use_percent
+        days_to_show: 365
+        title: RAM
+      - type: statistics-graph
+        entities:
+          - sensor.disk_use_percent
+        days_to_show: 365
+        chart_type: line
+        title: Disque
+      - type: history-graph
+        entities:
+          - sensor.temperature_cpu
+        hours_to_show: 24
+        refresh_interval: 0
+        title: Température CPU

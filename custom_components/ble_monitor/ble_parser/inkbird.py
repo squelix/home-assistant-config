@@ -32,6 +32,22 @@ def parse_inkbird(self, data, source_mac, rssi):
                 "battery": bat,
             }
         )
+    elif msg_length == 14:
+        device_type = "iBBQ-1"
+        inkbird_mac = data[6:12]
+        xvalue = data[12:14]
+        if source_mac not in [inkbird_mac, inkbird_mac[::-1]]:
+            _LOGGER.debug(
+                "Inkbird MAC address doesn't match data MAC address. Data: %s",
+                data.hex()
+            )
+            return None
+        (temp_1,) = unpack("<h", xvalue)
+        result.update(
+            {
+                "temperature probe 1": convert_temperature(temp_1),
+            }
+        )
     elif msg_length == 16:
         device_type = "iBBQ-2"
         inkbird_mac = data[6:12]
@@ -97,7 +113,7 @@ def parse_inkbird(self, data, source_mac, rssi):
         return None
 
     # check for MAC presence in sensor whitelist, if needed
-    if self.discovery is False and inkbird_mac.lower() not in self.sensor_whitelist:
+    if self.discovery is False and source_mac.lower() not in self.sensor_whitelist:
         _LOGGER.debug("Discovery is disabled. MAC: %s is not whitelisted!", to_mac(source_mac))
         return None
 
