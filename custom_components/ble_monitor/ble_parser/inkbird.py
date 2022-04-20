@@ -14,24 +14,33 @@ def convert_temperature(temp):
     return temperature
 
 
-def parse_inkbird(self, data, source_mac, rssi):
+def parse_inkbird(self, data, complete_local_name, source_mac, rssi):
     """Inkbird parser"""
     msg_length = len(data)
     firmware = "Inkbird"
     result = {"firmware": firmware}
     if msg_length == 11:
-        device_type = "IBS-TH"
         inkbird_mac = source_mac
         xvalue = data[2:10]
         (temp, hum) = unpack("<hH", xvalue[0:4])
         bat = int.from_bytes(xvalue[7:8], 'little')
-        result.update(
-            {
-                "temperature": temp / 100,
-                "humidity": hum / 100,
-                "battery": bat,
-            }
-        )
+        if complete_local_name == "sps":
+            device_type = "IBS-TH"
+            result.update(
+                {
+                    "temperature": temp / 100,
+                    "humidity": hum / 100,
+                    "battery": bat,
+                }
+            )
+        elif complete_local_name == "tps":
+            device_type = "IBS-TH2/P01B"
+            result.update(
+                {
+                    "temperature": temp / 100,
+                    "battery": bat,
+                }
+            )
     elif msg_length == 14:
         device_type = "iBBQ-1"
         inkbird_mac = data[6:12]
@@ -113,7 +122,7 @@ def parse_inkbird(self, data, source_mac, rssi):
         return None
 
     # check for MAC presence in sensor whitelist, if needed
-    if self.discovery is False and source_mac.lower() not in self.sensor_whitelist:
+    if self.discovery is False and source_mac not in self.sensor_whitelist:
         _LOGGER.debug("Discovery is disabled. MAC: %s is not whitelisted!", to_mac(source_mac))
         return None
 
@@ -129,5 +138,5 @@ def parse_inkbird(self, data, source_mac, rssi):
 
 
 def to_mac(addr: int):
-    """Convert MAC address."""
-    return ':'.join('{:02x}'.format(x) for x in addr).upper()
+    """Return formatted MAC address"""
+    return ':'.join(f'{i:02X}' for i in addr)
