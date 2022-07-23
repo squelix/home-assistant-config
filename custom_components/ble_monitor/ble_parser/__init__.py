@@ -1,25 +1,29 @@
 """Parser for passive BLE advertisements."""
+from typing import Optional
 import logging
 
 from .acconeer import parse_acconeer
 from .airmentor import parse_airmentor
+from .almendo import parse_almendo
 from .altbeacon import parse_altbeacon
 from .atc import parse_atc
 from .bluemaestro import parse_bluemaestro
 from .bparasite import parse_bparasite
 from .brifit import parse_brifit
-from .const import GATT_CHARACTERISTICS, TILT_TYPES
+from .const import TILT_TYPES
 from .govee import parse_govee
+from .helpers import to_mac, to_unformatted_mac
 from .ha_ble import parse_ha_ble
-from .ha_ble_legacy import parse_ha_ble_legacy
 from .hhcc import parse_hhcc
 from .ibeacon import parse_ibeacon
 from .inkbird import parse_inkbird
 from .inode import parse_inode
 from .jinou import parse_jinou
 from .kegtron import parse_kegtron
+from .kkm import parse_kkm
 from .laica import parse_laica
 from .miscale import parse_miscale
+from .mikrotik import parse_mikrotik
 from .moat import parse_moat
 from .oral_b import parse_oral_b
 from .qingping import parse_qingping
@@ -30,6 +34,7 @@ from .sensirion import parse_sensirion
 from .switchbot import parse_switchbot
 from .teltonika import parse_teltonika
 from .thermoplus import parse_thermoplus
+from .thermopro import parse_thermopro
 from .tilt import parse_tilt
 from .xiaomi import parse_xiaomi
 from .xiaogui import parse_xiaogui
@@ -44,24 +49,36 @@ class BleParser:
         report_unknown=False,
         discovery=True,
         filter_duplicates=False,
-        sensor_whitelist=[],
-        tracker_whitelist=[],
-        report_unknown_whitelist=[],
-        aeskeys={}
+        sensor_whitelist=None,
+        tracker_whitelist=None,
+        report_unknown_whitelist=None,
+        aeskeys=None
     ):
         self.report_unknown = report_unknown
         self.discovery = discovery
         self.filter_duplicates = filter_duplicates
-        self.sensor_whitelist = sensor_whitelist
-        self.tracker_whitelist = tracker_whitelist
-        self.report_unknown_whitelist = report_unknown_whitelist
-        self.aeskeys = aeskeys
+        if sensor_whitelist is None:
+            self.sensor_whitelist = []
+        else:
+            self.sensor_whitelist = sensor_whitelist
+        if tracker_whitelist is None:
+            self.tracker_whitelist = []
+        else:
+            self.tracker_whitelist = tracker_whitelist
+        if report_unknown_whitelist is None:
+            self.report_unknown_whitelist = []
+        else:
+            self.report_unknown_whitelist = report_unknown_whitelist
+        if aeskeys is None:
+            self.aeskeys = {}
+        else:
+            self.aeskeys = aeskeys
 
         self.lpacket_ids = {}
         self.movements_list = {}
         self.adv_priority = {}
 
-    def parse_data(self, data):
+    def parse_raw_data(self, data):
         """Parse the raw data."""
         # check if packet is Extended scan result
         is_ext_packet = True if data[3] == 0x0D else False
@@ -88,15 +105,12 @@ class BleParser:
             rssi = rssi - 256
         # MAC address
         mac = (data[8 if is_ext_packet else 7:14 if is_ext_packet else 13])[::-1]
-        sensor_data = None
-        tracker_data = None
         complete_local_name = ""
         shortened_local_name = ""
         service_class_uuid16 = None
         service_class_uuid128 = None
         service_data_list = []
         man_spec_data_list = []
-        unknown_sensor = False
 
         while adpayload_size > 1:
             adstuct_size = data[adpayload_start] + 1
@@ -129,6 +143,41 @@ class BleParser:
             adpayload_size -= adstuct_size
             adpayload_start += adstuct_size
 
+        if complete_local_name:
+            local_name = complete_local_name
+        else:
+            local_name = shortened_local_name
+
+        sensor_data, tracker_data = self.parse_advertisement(
+            mac,
+            rssi,
+            service_class_uuid16,
+            service_class_uuid128,
+            local_name,
+            service_data_list,
+            man_spec_data_list
+        )
+        return sensor_data, tracker_data
+
+    def parse_advertisement(
+            self,
+            mac: bytes,
+            rssi: int,
+            service_class_uuid16: Optional[int] = None,
+            service_class_uuid128: Optional[bytes] = None,
+            local_name: Optional[str] = "",
+            service_data_list: Optional[list] = None,
+            man_spec_data_list: Optional[list] = None
+    ):
+        """parse BLE advertisement"""
+        sensor_data = None
+        tracker_data = None
+        unknown_sensor = False
+        if service_data_list is None:
+            service_data_list = []
+        if man_spec_data_list is None:
+            man_spec_data_list = []
+
         while not sensor_data:
             if service_data_list:
                 for service_data in service_data_list:
@@ -149,7 +198,7 @@ class BleParser:
                         # UUID16 = User Data and Bond Management (used by BLE HA)
                         sensor_data = parse_ha_ble(self, service_data, uuid16, mac, rssi)
                         break
-                    elif uuid16 in [0xAA20, 0xAA21, 0xAA22] and complete_local_name == "ECo":
+                    elif uuid16 in [0xAA20, 0xAA21, 0xAA22] and local_name == "ECo":
                         # UUID16 = Relsib
                         sensor_data = parse_relsib(self, service_data, mac, rssi)
                         break
@@ -170,22 +219,23 @@ class BleParser:
                         sensor_data = parse_xiaomi(self, service_data, mac, rssi)
                         break
                     elif uuid16 == 0xFEAA:
-                        # UUID16 = Google (used by Ruuvitag V2/V4)
-                        sensor_data = parse_ruuvitag(self, service_data, mac, rssi)
-                        break
+                        if len(service_data) == 19:
+                            # UUID16 = Google (used by KKM)
+                            sensor_data = parse_kkm(self, service_data, mac, rssi)
+                            break
+                        elif len(service_data) >= 23:
+                            # UUID16 = Google (used by Ruuvitag V2/V4)
+                            sensor_data = parse_ruuvitag(self, service_data, mac, rssi)
+                            break
                     elif uuid16 == 0xFFF9:
                         # UUID16 = FIDO (used by Cleargrass)
                         sensor_data = parse_qingping(self, service_data, mac, rssi)
-                        break
-                    elif uuid16 in GATT_CHARACTERISTICS and shortened_local_name == "HA_BLE":
-                        # HA BLE legacy (deprecated)
-                        sensor_data = parse_ha_ble_legacy(self, service_data_list, mac, rssi)
                         break
                     elif uuid16 == 0x2A6E or uuid16 == 0x2A6F:
                         # UUID16 = Temperature and Humidity (used by Teltonika)
                         if len(service_data_list) == 2:
                             service_data = b"".join(service_data_list)
-                        sensor_data = parse_teltonika(self, service_data, complete_local_name, mac, rssi)
+                        sensor_data = parse_teltonika(self, service_data, local_name, mac, rssi)
                         break
                     else:
                         unknown_sensor = True
@@ -195,7 +245,7 @@ class BleParser:
                     comp_id = (man_spec_data[3] << 8) | man_spec_data[2]
                     data_len = man_spec_data[0]
                     # Filter on Company Identifier
-                    if comp_id == 0x0001 and data_len in [0x09, 0x0C]:
+                    if comp_id == 0x0001 and data_len in [0x09, 0x0C, 0x22, 0x25]:
                         # Govee H5101/H5102/H5177
                         sensor_data = parse_govee(self, man_spec_data, mac, rssi)
                         break
@@ -214,6 +264,14 @@ class BleParser:
                         # Ruuvitag V3/V5
                         sensor_data = parse_ruuvitag(self, man_spec_data, mac, rssi)
                         break
+                    elif comp_id == 0x094F and data_len == 0x15:
+                        # Mikrotik
+                        sensor_data = parse_mikrotik(self, man_spec_data, mac, rssi)
+                        break
+                    elif comp_id == 0x06E8:
+                        # Almendo (Blusensor)
+                        sensor_data = parse_almendo(self, man_spec_data, mac, rssi)
+                        break
                     elif comp_id == 0x1000 and data_len == 0x15:
                         # Moat S2
                         sensor_data = parse_moat(self, man_spec_data, mac, rssi)
@@ -224,13 +282,13 @@ class BleParser:
                         break
                     elif comp_id == 0x06D5:
                         # Sensirion
-                        sensor_data = parse_sensirion(self, man_spec_data, complete_local_name, mac, rssi)
+                        sensor_data = parse_sensirion(self, man_spec_data, local_name, mac, rssi)
                         break
                     elif comp_id in [0x2121, 0x2122] and data_len == 0x0B:
                         # Air Mentor
                         sensor_data = parse_airmentor(self, man_spec_data, mac, rssi)
                         break
-                    elif comp_id == 0x8801 and data_len == 0x0C:
+                    elif comp_id == 0x8801 and data_len in [0x0C, 0x25]:
                         # Govee H5179
                         sensor_data = parse_govee(self, man_spec_data, mac, rssi)
                         break
@@ -238,7 +296,7 @@ class BleParser:
                         # Brifit
                         sensor_data = parse_brifit(self, man_spec_data, mac, rssi)
                         break
-                    elif comp_id == 0xEC88 and data_len in [0x09, 0x0A, 0x0C]:
+                    elif comp_id == 0xEC88 and data_len in [0x09, 0x0A, 0x0C, 0x22, 0x24, 0x25]:
                         # Govee H5051/H5071/H5072/H5075/H5074
                         sensor_data = parse_govee(self, man_spec_data, mac, rssi)
                         break
@@ -272,8 +330,16 @@ class BleParser:
                         # Jinou BEC07-5
                         sensor_data = parse_jinou(self, man_spec_data, mac, rssi)
                         break
-                    elif service_class_uuid16 == 0x5183 and data_len == 0x11:
+                    elif service_class_uuid16 == 0x5182 and data_len in [0x14, 0x2D]:
+                        # Govee H5182
+                        sensor_data = parse_govee(self, man_spec_data, mac, rssi)
+                        break
+                    elif service_class_uuid16 == 0x5183 and data_len in [0x11, 0x2A]:
                         # Govee H5183
+                        sensor_data = parse_govee(self, man_spec_data, mac, rssi)
+                        break
+                    elif service_class_uuid16 == 0x5185 and data_len in [0x17, 0x30]:
+                        # Govee H5185
                         sensor_data = parse_govee(self, man_spec_data, mac, rssi)
                         break
                     elif service_class_uuid16 == 0xF0FF:
@@ -281,11 +347,11 @@ class BleParser:
                             # Thermoplus
                             sensor_data = parse_thermoplus(self, man_spec_data, mac, rssi)
                             break
-                        elif (comp_id in [0x0000, 0x0001] or complete_local_name in ["iBBQ", "sps", "tps"]) and (
+                        elif (comp_id in [0x0000, 0x0001] or local_name in ["iBBQ", "sps", "tps"]) and (
                             data_len in [0x0A, 0x0D, 0x0F, 0x13, 0x17]
                         ):
                             # Inkbird
-                            sensor_data = parse_inkbird(self, man_spec_data, complete_local_name, mac, rssi)
+                            sensor_data = parse_inkbird(self, man_spec_data, local_name, mac, rssi)
                             break
                         else:
                             unknown_sensor = True
@@ -299,9 +365,13 @@ class BleParser:
                         break
 
                     # Filter on complete local name
-                    elif complete_local_name in ["sps", "tps"] and data_len == 0x0A:
+                    elif local_name in ["sps", "tps"] and data_len == 0x0A:
                         # Inkbird IBS-TH
-                        sensor_data = parse_inkbird(self, man_spec_data, complete_local_name, mac, rssi)
+                        sensor_data = parse_inkbird(self, man_spec_data, local_name, mac, rssi)
+                        break
+                    elif local_name[0:5] == "TP359" and data_len == 0x07:
+                        # Thermopro
+                        sensor_data = parse_thermopro(self, man_spec_data, local_name[0:5], mac, rssi)
                         break
 
                     # Filter on other parts of the manufacturer specific data
@@ -318,7 +388,20 @@ class BleParser:
             else:
                 unknown_sensor = True
             if unknown_sensor and self.report_unknown == "Other":
-                _LOGGER.info("Unknown advertisement received: %s", data.hex())
+                _LOGGER.info(
+                    "Unknown advertisement received for mac: %s"
+                    "service data: %s"
+                    "manufacturer specific data: %s"
+                    "local name: %s"
+                    "UUID16: %s,"
+                    "UUID128: %s",
+                    to_mac(mac),
+                    service_data_list,
+                    man_spec_data_list,
+                    local_name,
+                    service_class_uuid16,
+                    service_class_uuid128,
+                )
             break
 
         # check for monitored device trackers
@@ -329,7 +412,7 @@ class BleParser:
             else:
                 tracker_data = {
                     "is connected": True,
-                    "mac": ''.join('{:02X}'.format(x) for x in mac),
+                    "mac": to_unformatted_mac(mac),
                     "rssi": rssi,
                 }
         else:
@@ -337,6 +420,19 @@ class BleParser:
 
         if self.report_unknown_whitelist:
             if tracker_id in self.report_unknown_whitelist:
-                _LOGGER.info("BLE advertisement received from MAC/UUID %s: %s", tracker_id.hex(), data.hex())
+                _LOGGER.info(
+                    "BLE advertisement received from MAC/UUID %s: "
+                    "service data: %s"
+                    "manufacturer specific data: %s"
+                    "local name: %s"
+                    "UUID16: %s,"
+                    "UUID128: %s",
+                    tracker_id.hex(),
+                    service_data_list,
+                    man_spec_data_list,
+                    local_name,
+                    service_class_uuid16,
+                    service_class_uuid128
+                )
 
         return sensor_data, tracker_data

@@ -114,7 +114,7 @@ CONF_HMAX = 99.9
 
 # Sensors with deviating temperature range
 KETTLES = ('YM-K1501', 'YM-K1501EU', 'V-SK152')
-PROBES = ('iBBQ-2', 'iBBQ-4', 'iBBQ-6', 'H5183')
+PROBES = ('iBBQ-2', 'iBBQ-4', 'iBBQ-6', 'H5182', 'H5183', 'H5185')
 
 
 # Sensor entity description
@@ -289,6 +289,36 @@ BINARY_SENSOR_TYPES: tuple[BLEMonitorBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.POWER,
         force_update=False,
     ),
+    BLEMonitorBinarySensorEntityDescription(
+        key="tilt",
+        sensor_class="BaseBinarySensor",
+        update_behavior="Instantly",
+        name="ble tilt",
+        unique_id="ti_",
+        icon="mdi:rotate-orbit",
+        device_class=None,
+        force_update=False,
+    ),
+    BLEMonitorBinarySensorEntityDescription(
+        key="dropping",
+        sensor_class="BaseBinarySensor",
+        update_behavior="Instantly",
+        name="ble dropping",
+        unique_id="dr_",
+        icon="mdi:chevron-triple-down",
+        device_class=None,
+        force_update=False,
+    ),
+    BLEMonitorBinarySensorEntityDescription(
+        key="impact",
+        sensor_class="BaseBinarySensor",
+        update_behavior="Instantly",
+        name="ble impact",
+        unique_id="imp_",
+        icon="mdi:arrow-collapse-right",
+        device_class=None,
+        force_update=False,
+    ),
 )
 
 
@@ -374,21 +404,21 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BLEMonitorSensorEntityDescription(
-        key="temperature outdoor",
+        key="temperature alarm probe 1",
         sensor_class="TemperatureSensor",
         update_behavior="Averaging",
-        name="ble temperature outdoor",
-        unique_id="t_outdoor_",
+        name="ble temperature alarm probe 1",
+        unique_id="t_alarm_probe_1_",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BLEMonitorSensorEntityDescription(
-        key="temperature alarm",
+        key="temperature alarm probe 2",
         sensor_class="TemperatureSensor",
         update_behavior="Averaging",
-        name="ble temperature alarm",
-        unique_id="t_alarm_",
+        name="ble temperature alarm probe 2",
+        unique_id="t_alarm_probe_2_",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -420,16 +450,6 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
         name="ble cypress humidity",
         unique_id="h_cypress_",
         native_unit_of_measurement="RH%",
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    BLEMonitorSensorEntityDescription(
-        key="humidity outdoor",
-        sensor_class="HumiditySensor",
-        update_behavior="Averaging",
-        name="ble humidity outdoor",
-        unique_id="h_outdoor_",
-        native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -945,6 +965,7 @@ SENSOR_TYPES: tuple[BLEMonitorSensorEntityDescription, ...] = (
 MEASUREMENT_DICT = {
     'LYWSDCGQ'                : [["temperature", "humidity", "battery", "rssi"], [], []],
     'LYWSD02'                 : [["temperature", "humidity", "battery", "rssi"], [], []],
+    'LYWSD02MMC'              : [["temperature", "humidity", "battery", "rssi"], [], []],
     'LYWSD03MMC'              : [["temperature", "humidity", "battery", "voltage", "rssi"], [], []],
     'XMWSDJ04MMC'             : [["temperature", "humidity", "battery", "rssi"], [], []],
     'XMMF01JQD'               : [["rssi"], ["button"], []],
@@ -965,7 +986,7 @@ MEASUREMENT_DICT = {
     'ZNMS16LM'                : [["battery", "rssi"], [], ["lock", "door", "fingerprint"]],
     'ZNMS17LM'                : [["battery", "rssi"], [], ["lock", "door", "fingerprint", "antilock", "childlock"]],
     'MJZNMSQ01YD'             : [["battery", "rssi"], [], ["lock", "fingerprint"]],
-    'XMZNMST02YD'             : [["battery", "rssi"], [], ["lock", "fingerprint"]],
+    'XMZNMST02YD'             : [["battery", "rssi"], [], ["lock", "door", "fingerprint"]],
     'CGC1'                    : [["temperature", "humidity", "battery", "rssi"], [], []],
     'CGD1'                    : [["temperature", "humidity", "battery", "rssi"], [], []],
     'CGDK2'                   : [["temperature", "humidity", "battery", "voltage", "rssi"], [], []],
@@ -982,6 +1003,7 @@ MEASUREMENT_DICT = {
     'K9B-1BTN'                : [["rssi"], ["one btn switch"], []],
     'K9B-2BTN'                : [["rssi"], ["two btn switch left", "two btn switch right"], []],
     'K9B-3BTN'                : [["rssi"], ["three btn switch left", "three btn switch middle", "three btn switch right"], []],
+    'XMWXKG01YL'              : [["rssi"], ["two btn switch left", "two btn switch right"], []],
     'YLAI003'                 : [["rssi", "battery"], ["button"], []],
     'YLYK01YL'                : [["rssi"], ["remote"], ["remote single press", "remote long press"]],
     'YLYK01YL-FANCL'          : [["rssi"], ["fan remote"], []],
@@ -1002,9 +1024,12 @@ MEASUREMENT_DICT = {
     'H5101/H5102/H5177'       : [["temperature", "humidity", "battery", "rssi"], [], []],
     'H5051/H5071'             : [["temperature", "humidity", "battery", "rssi"], [], []],
     'H5074'                   : [["temperature", "humidity", "battery", "rssi"], [], []],
-    'H5178'                   : [["temperature", "temperature outdoor", "humidity", "humidity outdoor", "battery", "rssi"], [], []],
+    'H5178'                   : [["temperature", "humidity", "battery", "rssi"], [], []],
+    'H5178-outdoor'           : [["temperature", "humidity", "battery", "rssi"], [], []],
     'H5179'                   : [["temperature", "humidity", "battery", "rssi"], [], []],
-    'H5183'                   : [["temperature probe 1", "temperature alarm", "rssi"], [], []],
+    'H5182'                   : [["temperature probe 1", "temperature alarm probe 1", "temperature probe 2", "temperature alarm probe 2", "rssi"], [], []],
+    'H5183'                   : [["temperature probe 1", "temperature alarm probe 1", "rssi"], [], []],
+    'H5185'                   : [["temperature probe 1", "temperature alarm probe 1", "temperature probe 2", "temperature alarm probe 2", "rssi"], [], []],
     'Ruuvitag'                : [["temperature", "humidity", "pressure", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
     'iNode Energy Meter'      : [["battery", "voltage", "rssi"], ["energy", "power"], []],
     "iNode Care Sensor 1"     : [["temperature", "battery", "voltage", "rssi"], ["acceleration"], ["motion"]],
@@ -1032,6 +1057,7 @@ MEASUREMENT_DICT = {
     'b-parasite V1.0.0'       : [["temperature", "humidity", "moisture", "voltage", "rssi"], [], []],
     'b-parasite V1.1.0'       : [["temperature", "humidity", "moisture", "voltage", "rssi", "illuminance"], [], []],
     'SmartSeries 7000'        : [["rssi"], [], ["toothbrush"]],
+    'IO Series 7'             : [["rssi"], [], ["toothbrush"]],
     'iBBQ-1'                  : [["temperature probe 1", "rssi"], [], []],
     'iBBQ-2'                  : [["temperature probe 1", "temperature probe 2", "rssi"], [], []],
     'iBBQ-4'                  : [["temperature probe 1", "temperature probe 2", "temperature probe 3", "temperature probe 4", "rssi"], [], []],
@@ -1043,16 +1069,21 @@ MEASUREMENT_DICT = {
     'AltBeacon'               : [["rssi", "measured power"], ["uuid", "mac", "major", "minor"], []],  # mac can be dynamic
     'EClerk Eco'              : [["temperature", "humidity", "co2", "battery", "rssi"], [], []],
     'Air Mentor Pro 2'        : [["temperature", "temperature calibrated", "humidity", "co2", "tvoc", "aqi", "air quality", "pm2.5", "pm10", "rssi"], [], []],
+    'bluSensor Mini'          : [["temperature", "humidity", "co2", "tvoc", "aqi", "rssi"], [], []],
     'Meter TH S1'             : [["temperature", "humidity", "battery", "rssi"], [], []],
     'Meter TH plus'           : [["temperature", "humidity", "battery", "rssi"], [], []],
     'Laica Smart Scale'       : [["weight", "impedance", "rssi"], [], []],
     "Acconeer XM122"          : [["temperature", "battery", "rssi"], [], ["motion"]],
+    'K6 Sensor Beacon'        : [["temperature", "humidity", "acceleration", "voltage", "battery", "rssi"], [], []],
+    'DSL-C08'                 : [["battery", "rssi", "voltage"], [], ["lock", "childlock"]],
 }
 
 # Sensor manufacturer dictionary
 MANUFACTURER_DICT = {
+    'DSL-C08'                 : 'Lockin',
     'LYWSDCGQ'                : 'Xiaomi',
     'LYWSD02'                 : 'Xiaomi',
+    'LYWSD02MMC'              : 'Xiaomi',
     'LYWSD03MMC'              : 'Xiaomi',
     'XMWSDJ04MMC'             : 'Xiaomi',
     'XMMF01JQD'               : 'Xiaomi',
@@ -1096,6 +1127,7 @@ MANUFACTURER_DICT = {
     'K9B-1BTN'                : 'Linptech',
     'K9B-2BTN'                : 'Linptech',
     'K9B-3BTN'                : 'Linptech',
+    'XMWXKG01YL'              : 'Xiaomi',
     'ATC'                     : 'ATC',
     'Mi Scale V1'             : 'Xiaomi',
     'Mi Scale V2'             : 'Xiaomi',
@@ -1111,8 +1143,11 @@ MANUFACTURER_DICT = {
     'H5051/H5071'             : 'Govee',
     'H5074'                   : 'Govee',
     'H5178'                   : 'Govee',
+    'H5178-outdoor'           : 'Govee',
     'H5179'                   : 'Govee',
+    'H5182'                   : 'Govee',
     'H5183'                   : 'Govee',
+    'H5185'                   : 'Govee',
     'Ruuvitag'                : 'Ruuvitag',
     'iNode Energy Meter'      : 'iNode',
     "iNode Care Sensor 1"     : 'iNode',
@@ -1140,6 +1175,7 @@ MANUFACTURER_DICT = {
     'b-parasite V1.0.0'       : 'rbaron',
     'b-parasite V1.1.0'       : 'rbaron',
     'SmartSeries 7000'        : 'Oral-B',
+    'IO Series 7'             : 'Oral-B',
     'iBBQ-1'                  : 'Inkbird',
     'iBBQ-2'                  : 'Inkbird',
     'iBBQ-4'                  : 'Inkbird',
@@ -1151,10 +1187,12 @@ MANUFACTURER_DICT = {
     'AltBeacon'               : 'Radius Networks',
     'EClerk Eco'              : 'Relsib',
     'Air Mentor Pro 2'        : 'Air Mentor',
+    'bluSensor Mini'          : 'Almendo',
     'Meter TH S1'             : 'Switchbot',
     'Meter TH plus'           : 'Switchbot',
     'Laica Smart Scale'       : 'Laica',
     'Acconeer XM122'          : 'Acconeer',
+    'K6 Sensor Beacon'        : 'KKM',
 }
 
 
@@ -1170,7 +1208,12 @@ RENAMED_MODEL_DICT = {
 
 # Sensors that support automatic adding of sensors and binary sensors
 AUTO_MANUFACTURER_DICT = {
+    'HHCCJCY10'               : 'HHCC',
+    'HHCCJCY10'               : 'HHCC',
     'HA BLE DIY'              : 'Home Assistant DIY',
+    'TG-BT5-IN'               : 'Mikrotik',
+    'TG-BT5-OUT'              : 'Mikrotik',
+    'TP359'                   : 'Thermopro',
     'Tilt Red'                : 'Tilt',
     'Tilt Green'              : 'Tilt',
     'Tilt Black'              : 'Tilt',
@@ -1180,7 +1223,6 @@ AUTO_MANUFACTURER_DICT = {
     'Tilt Yellow'             : 'Tilt',
     'Tilt Pink'               : 'Tilt',
     'Tilt Green'              : 'Tilt',
-    'HHCCJCY10'               : 'HHCC',
 }
 
 
@@ -1189,12 +1231,17 @@ AUTO_BINARY_SENSOR_LIST = [
     "binary",
     "opening",
     "switch",
+    "tilt",
+    "dropping",
+    "impact",
 ]
 
 
 # Sensors that are automatically added if device is in AUTO_MANUFACTURER_DICT
 AUTO_SENSOR_LIST = [
+    "acceleration",
     "battery",
+    "co2",
     "conductivity",
     "count",
     "dewpoint",
@@ -1209,6 +1256,7 @@ AUTO_SENSOR_LIST = [
     "pressure",
     "rssi",
     "temperature",
+    "tvoc",
     "voltage",
     "weight",
 ]
@@ -1230,7 +1278,9 @@ REPORT_UNKNOWN_LIST = [
     "iBeacon",
     "Jinou"
     "Kegtron",
+    "KKM",
     "Mi Scale",
+    "Mikrotik"
     "Moat",
     "Oral-B",
     "Qingping",
